@@ -1,5 +1,8 @@
-# Santander - Cibersegurança 2025
-Repositório destinado ao desafio do curso Santander - Cibersegurança 2025
+<h1>
+  <img src="imagens/santander-bootcamp-logo.png" width="50" style="vertical-align: middle;">
+  Santander - Cibersegurança 2025
+</h1>
+Repositório destinado ao desafio do curso Santander - Cibersegurança 2025.
 
 Este repositório documenta toda a construção de um laboratório e execução dos ataques simulados, utilizando Kali Linux, Metasploitable 2, DVWA, Medusa, Burp Suite e Nmap. O foco do projeto é entender na prática como funcionam ataques de brute-force.
 
@@ -97,7 +100,8 @@ Credencial encontrada:
 Este foi um brute-force simples com a ferramenta Medusa, mas funciona porque o FTP explorado não possui proteção contra tentativas excessivas, além do serviço estar exposto.
 
 
-🕸️ **Ataque 2: Brute-force em Formulário Web DVWA com Burp Suite**
+🕸️ **Ataque 2: Brute-force em Formulário Web DVWA com Burp Suite**  
+
 Para ataques em formulários de login, não adianta usar ferramentas como Medusa, pois precisamos manipular requisições HTTP. Para isso, o Burp Suite é perfeito, pois nos vai permitir por meio do proxy, a modificação das requisições entre nossa máquina Kali e o site do DVWA.
    
 <img src="imagens/8-brute-force-dvwa.png" width="500">
@@ -128,9 +132,10 @@ Copiamos as credenciais da requisição diferente e realizamos login, confirmand
 
 **admin** : **password**
 
-📁 **Ataque 3: Password Spraying em SMB**
+📁 **Ataque 3: Password Spraying em SMB com Medusa**
 
 Diferente do brute-force, no password spraying usamos uma senha para vários usuários. Isso é útil quando tem chance de sermos bloqueados por várias tentativas de login ou o sistema usa senhas fracas ou com padrão.  
+
 Utilizamos o seguinte comando para realizarmos este ataque:  
 
 `medusa -h 192.168.1.7 -U /home/kali/Wordlists/Sec-Lists-master/Usernames/top-usernames-shortlist.txt -p "user" -M smbnt -f`
