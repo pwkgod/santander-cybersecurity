@@ -1,175 +1,151 @@
-# santander-cybersecurity
+# Santander - Cibersegurança 2025
 Repositório destinado ao desafio do curso Santander - Cibersegurança 2025
 
-Este repositório contém a documentação completa do desafio solicitado no curso Santander - Cibersegurança 2025, utilizando o Kali Linux, Metasploitable 2, DVWA, Medusa e outras ferramentas para simular ataques de força bruta e estudar ataque comuns em ambientes vulneráveis.
+Este repositório documenta toda a construção de um laboratório e execução dos ataques simulados, utilizando Kali Linux, Metasploitable 2, DVWA, Medusa, Burp Suite e Nmap. O foco do projeto é entender na prática como funcionam ataques de brute-force.
 
 🎯 **Objetivo do Desafio**
 
-O objetivo foi simular ataques reais para fins educativos, entre eles:
-● Brute-force em FTP
-● Brute-force em formulário web (DVWA)
-● Password spraying em SMB
+O desafio consiste em montar um ambiente controlado e reproduzir ataques comuns solicitados no desafio do curso:  
+● Brute-force em **FTP**  
+● Brute-force em formulário web (**DVWA**)  
+● Password spraying em **SMB**  
 
 🧩 **Cenário do Laboratório**
 
-● VM 1 (Atacante): Kali Linux
-● VM 2 (Alvo): Metasploitable 2
-Rede: Host-only Network
+Todo o ambiente foi montado localmente usando VirtualBox, com rede Host-only para isolar as VMs da internet:  
+● VM 1 (Atacante): Kali Linux  
+● VM 2 (Alvo): Metasploitable 2  
+Rede usada: Host-only Network
 
 📌 **Download do Metasploitable 2**
 
-Baixado via SourceForge.
+O Metasploitable 2 foi baixado diretamente do SourceForge, o repositório oficial do projeto. A ISO da máquina contém vários serviços vulneráveis, ideais para laboratórios de pentest.
 
-📸 Screenshot da página de download:
-<img src="images/download_metasploitable.png" width="500">
+<img src="imagens/1-download-metasploitable.png" width="500">
 
-📌 Criação da VM no VirtualBox
+📌 **Criação da VM no VirtualBox**
 
-Importação da ISO/VDI do Metasploitable
+Após o download, foi feita a criação da VM:  
+● Importação da ISO do Metasploitable  
+● Configuração da rede como Host-only Adapter para ambas VMs se comunicarem  
+● Inicialização da máquina Metasploitable para permitir que os serviços subissem
 
-Configuração da rede como Host-only Adapter
+<img src="imagens/2-start-metasploitable.png" width="500">
 
-Inicialização da máquina e aguardo das configurações iniciais
+📌 **Login padrão**
 
-📸 Screenshot da inicialização da VM:
-<img src="images/startup_cli.png" width="500">
+Para acessar o sistema usamos as credenciais:
+**msfadmin** / **msfadmin**
 
-📌 Login padrão
+<img src="imagens/3-config-metasploitable.png" width="500">
 
-Credenciais usadas:
+🌐 **Verificação de Comunicação entre VMs**
 
-msfadmin / msfadmin
+Antes de realizarmos os ataques, validamos se as máquinas realmente se comunicam. No Kali, verifiquei o IP das VMs com:
+
+`ifconfig`  
+
+E testei a comunicação entre elas com:  
+
+`ping 192.168.1.8`
+
+<img src="imagens/4-ping-metasploitable.png" width="450">
+
+🛰️ **Enumeração com Nmap**
+
+Foi feito a enumeração das portas da máquina Metasploitable com o scanner Nmap:  
+
+`nmap -sV -v -p- 192.168.1.7`  
+
+**Flags utilizadas:**  
+
+**-sV** → descobre serviços e versões  
+**-v** → modo verbose (scan detalhado)  
+**-p-** → scan em todas as portas  
+
+<img src="imagens/5-nmap-metasploitable.png" width="500">
+
+**Resultado:** Descobrimos que a porta 21 (FTP) está aberta e vulnerável, além de smb, http e outros serviços inseguros que podem ser explorados.
+
+🔐 **Ataque 1: Brute-force em FTP com Medusa**
+
+Para este ataque, realizamos a criação manual de duas wordlists básicas com os comandos:  
+
+`echo "admin\nmsfadmin\nroot\nteste\nftp" > usuarios_comuns.txt`  
+`echo "12345\nmsfadmin\nteste\n123456789\nroot\nadmin\nftp" > senhas_comuns.txt`  
+
+<img src="imagens/6-criando-wordlist.png" width="550">
+
+**Ataque com Medusa:**
+
+`medusa -h 192.168.1.7 -U usuarios_comuns.txt -P senhas_comuns.txt -M ftp -t 5`  
+
+**Flags utilizadas:**
+
+**-h** → nosso alvo  
+**-U** → arquivo com lista de usuários  
+**-P** → arquivo com lista de senhas  
+**-M ftp** → módulo do protocolo FTP  
+**-t 5** → cinco threads simultâneas para o ataque ser mais rápido  
+
+<img src="imagens/7-brute-force-ftp.png" width="550">
+
+Credencial encontrada:  
+
+**msfadmin** : **msfadmin**  
+
+Este foi um brute-force simples com a ferramenta Medusa, mas funciona porque o FTP explorado não possui proteção contra tentativas excessivas, além do serviço estar exposto.
 
 
-📸 Screenshot do login realizado:
-<img src="images/login_msfadmin.png" width="500">
+🕸️ **Ataque 2: Brute-force em Formulário Web DVWA com Burp Suite**
+Para ataques em formulários de login, não adianta usar ferramentas como Medusa, pois precisamos manipular requisições HTTP. Para isso, o Burp Suite é perfeito, pois nos vai permitir por meio do proxy, a modificação das requisições entre nossa máquina Kali e o site do DVWA.
+   
+<img src="imagens/8-brute-force-dvwa.png" width="500">
 
-🌐 Verificação de Comunicação
+Acessei o DVWA e tentei logar para interceptar a requisição GET de login, onde a requisição foi capturada no Burp:
 
-No Kali, verifiquei IP com:
+<img src="imagens/9-burp-suite-request.png" width="500">
 
-ifconfig
-
-
-E testei comunicação com:
-
-ping 192.168.1.7
-
-
-📸 Screenshot do ping:
-<img src="images/ping_test.png" width="450">
-
-🛰️ Enumeração com Nmap
-
-Comando utilizado:
-
-nmap -sV -v -p- 192.168.1.7
-
-
-Flags:
-
--sV → descobre serviços e versões
-
--v → modo verboso
-
--p- → escaneia todas as portas
-
-📸 Screenshot do scan:
-<img src="images/nmap_scan.png" width="500">
-
-Resultado: porta 21 (FTP) aberta e vulnerável, além de smb, http e outros serviços inseguros.
-
-🔐 Ataque 1 — Força Bruta em FTP com Medusa
-
-Criação manual de wordlists:
-
-echo "admin\nmsfadmin\nroot\nteste\nftp" > usuarios_comuns.txt
-echo "12345\nmsfadmin\nteste\n123456789\nroot\nadmin\nftp" > senhas_comuns.txt
-
-
-Ataque com Medusa:
-
-medusa -h 192.168.1.7 -U usuarios_comuns.txt -P senhas_comuns.txt -M ftp -t 5
-
-🔍 Flags explicadas:
-
--h → host alvo
-
--U → arquivo contendo lista de usuários
-
--P → arquivo contendo lista de senhas
-
--M ftp → módulo do protocolo (FTP nesse caso)
-
--t 5 → cinco threads simultâneas
-
-📸 Screenshot do brute-force:
-<img src="images/medusa_ftp.png" width="550">
-
-Credencial encontrada:
-
-msfadmin : msfadmin
-
-🕸️ Ataque 2 — Brute-force em Formulário Web DVWA com Burp Suite
-1. Abrir login do DVWA e interceptar a requisição
-
-Configuração do proxy e captura do login.
-
-📸 Screenshot da página DVWA:
-<img src="images/dvwa_login.png" width="500">
-
-📸 Requisição capturada:
-<img src="images/burp_request.png" width="500">
-
-2. Enviar a requisição ao Intruder
+Com a requisição capturada, realizamos o envio para o Intruder, que vai nos possibilitar modifica-la:  
 
 → Botão direito → Send to Intruder
 
-📸
-<img src="images/send_to_intruder.png" width="450">
+<img src="imagens/10-burp-suite-intruder.png" width="450">
 
-3. Configurar modo Cluster Bomb
+No Intruder, configuramos o modo **Cluster Bomb Attack**, esse modo de ataque nos permite testar combinações diferentes de usuários e senhas (wordlist dupla):   
 
-posição 1 → username
+**posição 1** → username  
+**posição 2** → password  
+**payloads** → wordlists do SecLists
 
-posição 2 → password
+<img src="imagens/11-burp-suite-intruder-2.png" width="450">
 
-payloads → wordlists do SecLists
+Ao configurarmos o ataque, executamos e observamos na tela de requisições enviadas que todas as respostas retornam o status **200 OK**, mas uma tem tamanho diferente, indicando que houve uma mudança na página, redirecionamento interno ou um login bem-sucedido.
 
-📸
-<img src="images/intruder_positions.png" width="500">
+<img src="imagens/12-burp-suite-intruder-3.png" width="550">
 
-4. Execução do ataque
+Copiamos as credenciais da requisição diferente e realizamos login, confirmando que a credencial descoberta foi:   
 
-Todas as respostas retornam 200, mas uma tem tamanho diferente → credencial válida.
+**admin** : **password**
 
-📸
-<img src="images/intruder_results.png" width="550">
+📁 **Ataque 3: Password Spraying em SMB**
 
-Credencial descoberta:
+Diferente do brute-force, no password spraying usamos uma senha para vários usuários. Isso é útil quando tem chance de sermos bloqueados por várias tentativas de login ou o sistema usa senhas fracas ou com padrão.  
+Utilizamos o seguinte comando para realizarmos este ataque:  
 
-admin : password
+`medusa -h 192.168.1.7 -U /home/kali/Wordlists/Sec-Lists-master/Usernames/top-usernames-shortlist.txt -p "user" -M smbnt -f`
 
-📁 Ataque 3 — Password Spraying em SMB
+**Flags utilizadas:**
 
-Comando utilizado:
+**-U** → lista de usuários  
+**-p** → senha única (password spraying)  
+**-M** smbnt → módulo para protocolo SMB  
+**-f** → encerra o ataque ao encontrar uma credencial válida  
 
-medusa -h 192.168.1.7 -U /home/kali/Wordlists/Sec-Lists-master/Usernames/top-usernames-shortlist.txt -p "user" -M smbnt -f
+<img src="imagens/13-password-spraying-smb.png" width="550">
 
+Credencial encontrada:  
 
-Flags importantes:
+**user** : **user**  
 
--U → lista de usuários
-
--p → senha única (password spraying)
-
--M smbnt → módulo para SMB
-
--f → encerra ao encontrar credencial válida
-
-📸
-<img src="images/medusa_smb.png" width="550">
-
-Credencial identificada:
-
-user : user
+Neste ataque, o SMB da máquina é vulnerável de propósito, mas esse ataque é muito comum em empresas, especialmente quando usuários tem senhas fracas ou a empresa segue padrões de senha para serviços e contas.
